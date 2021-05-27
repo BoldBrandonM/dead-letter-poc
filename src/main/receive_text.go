@@ -4,6 +4,7 @@ import (
 	"github.com/streadway/amqp"
 	"log"
 	"dead-letter-poc/helpers"
+	"flag"
 )
 
 func main() {
@@ -18,6 +19,12 @@ func main() {
 	q := helpers.SetupQueueBinding(ch, "messages", "topic", "text_queue", "text", "messages_dlx", false)
 	helpers.SetupQueueBinding(ch, "messages_dlx", "fanout", "messages_dlq", "", "", true)
 
+	failFlag := flag.Bool("fail", false, "-fail")
+	flag.Parse()
+	shouldFail := *failFlag
+
+	// NOTE: Consume is destructive, if set up to auto ack, the messages will be lost between when
+	// they are taken from the queue and when they are processed here IF the consumer crashes for whatever reason.
 	msgs, err := ch.Consume(
 		q.Name,
 		"",
@@ -33,10 +40,19 @@ func main() {
 
 	go func() {
 		for d := range msgs {
-			// TODO: toggle ack vs nack to simulate max retries based on cli flags
-			d.Nack(false, false)
-			// d.Ack(false)
-			// log.Printf("Received a text message: %s", d.Body)
+			if shouldFail {
+				d.Nack(false, false)
+			} else {
+				d.Ack(false)
+				log.Printf("Received a text message: %s", d.Body)
+
+				// NOTE: this demonstrates that we can manually dead-letter a message, for example if we ran out of retries
+				if string(d.Body) == "Hello Underworld!" {
+					log.Print("Manually publishing dead letter")
+
+					helpers.PublishMessage(ch, "messages_dlx", d.RoutingKey, d.ContentType, string(d.Body))
+				}
+			}
 		}
 	}()
 
