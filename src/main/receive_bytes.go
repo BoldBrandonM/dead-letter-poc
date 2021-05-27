@@ -32,7 +32,7 @@ func main() {
 		false,   // delete when unused
 		false,   // exclusive
 		false,   // no-wait
-		nil,     // arguments
+		amqp.Table{"x-dead-letter-exchange": "messages_dlx"},     // arguments
 	)
 	helpers.FailOnError(err, "Failed to declare a queue")
 
@@ -58,8 +58,11 @@ func main() {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a bytes message: %s", d.Body)
+			// TODO: toggle ack vs nack to simulate max retries
+			// d.Nack(false, false)
+
 			d.Ack(false)
+			log.Printf("Received a bytes message: %s", d.Body)
 		}
 	}()
 
