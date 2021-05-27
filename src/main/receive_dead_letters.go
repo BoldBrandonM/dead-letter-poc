@@ -17,13 +17,13 @@ func main() {
 	defer ch.Close()
 
 	msgs, err := ch.Consume(
-		"messages_dlq", // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		"messages_dlq",
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
 	)
 	helpers.FailOnError(err, "Failed to register a consumer")
 
@@ -35,10 +35,10 @@ func main() {
 			log.Printf("Received a text message: %s", d.Body)
 			log.Printf("exchange: %v\nrouting key: %v", d.Exchange, d.RoutingKey)
 			err = ch.Publish(
-				"messages",     // exchange
-				d.RoutingKey, // routing key
-				false,  // mandatory
-				false,  // immediate
+				"messages",
+				d.RoutingKey,
+				false,
+				false,
 				amqp.Publishing {
 					ContentType: "application",
 					Body:        d.Body,

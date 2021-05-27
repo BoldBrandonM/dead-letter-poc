@@ -15,42 +15,17 @@ func main() {
 	helpers.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	err = ch.ExchangeDeclare(
-		"messages", // name
-		"topic",      // type
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
-	)
-	helpers.FailOnError(err, "Failed to declare an exchange")
-
-	q, err := ch.QueueDeclare(
-		"text_queue", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		amqp.Table{"x-dead-letter-exchange": "messages_dlx"},     // arguments
-	)
-	helpers.FailOnError(err, "Failed to declare a queue")
-
-	err = ch.QueueBind(q.Name,       // queue name
-		"text",            // routing key
-		"messages", // exchange
-		false,
-		nil)
-	helpers.FailOnError(err, "Failed to bind a queue")
+	// TODO: test multiple queues sending to the same dlx
+	q := helpers.SetupQueueBinding(ch, "messages", "topic", "text_queue", "text", "", false)
 
 	msgs, err := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		false,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
+		q.Name,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
 	)
 	helpers.FailOnError(err, "Failed to register a consumer")
 
