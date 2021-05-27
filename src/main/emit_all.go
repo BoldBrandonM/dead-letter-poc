@@ -26,6 +26,40 @@ func main() {
 	)
 	helpers.FailOnError(err, "Failed to declare an exchange")
 
+	textQ, err := ch.QueueDeclare(
+		"text_queue", // name
+		false,   // durable
+		false,   // delete when unused
+		false,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+	helpers.FailOnError(err, "Failed to declare a queue")
+
+	err = ch.QueueBind(textQ.Name,       // queue name
+		"text",            // routing key
+		"messages", // exchange
+		false,
+		nil)
+	helpers.FailOnError(err, "Failed to bind a queue")
+
+	bytesQ, err := ch.QueueDeclare(
+		"bytes_queue", // name
+		false,   // durable
+		false,   // delete when unused
+		false,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+	helpers.FailOnError(err, "Failed to declare a queue")
+
+	err = ch.QueueBind(bytesQ.Name,       // queue name
+		"bytes",            // routing key
+		"messages", // exchange
+		false,
+		nil)
+	helpers.FailOnError(err, "Failed to bind a queue")
+
 	body := "Hello World!"
 	err = ch.Publish(
 		"messages",     // exchange

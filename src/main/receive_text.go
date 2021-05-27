@@ -41,6 +41,7 @@ func main() {
 		"messages", // exchange
 		false,
 		nil)
+	helpers.FailOnError(err, "Failed to bind a queue")
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
