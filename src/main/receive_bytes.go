@@ -16,6 +16,7 @@ func main() {
 	defer ch.Close()
 
 	q := helpers.SetupQueueBinding(ch, "messages", "topic", "bytes_queue", "bytes", "messages_dlx", false)
+	helpers.SetupQueueBinding(ch, "messages_dlx", "fanout", "messages_dlq", "", "", true)
 
 	msgs, err := ch.Consume(
 		q.Name,
@@ -33,10 +34,9 @@ func main() {
 	go func() {
 		for d := range msgs {
 			// TODO: toggle ack vs nack to simulate max retries based on cli flags
-			// d.Nack(false, false)
-
-			d.Ack(false)
-			log.Printf("Received a bytes message: %s", d.Body)
+			d.Nack(false, false)
+			// d.Ack(false)
+			// log.Printf("Received a bytes message: %s", d.Body)
 		}
 	}()
 

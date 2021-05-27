@@ -15,8 +15,8 @@ func main() {
 	helpers.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	// TODO: test multiple queues sending to the same dlx
-	q := helpers.SetupQueueBinding(ch, "messages", "topic", "text_queue", "text", "", false)
+	q := helpers.SetupQueueBinding(ch, "messages", "topic", "text_queue", "text", "messages_dlx", false)
+	helpers.SetupQueueBinding(ch, "messages_dlx", "fanout", "messages_dlq", "", "", true)
 
 	msgs, err := ch.Consume(
 		q.Name,
@@ -33,9 +33,10 @@ func main() {
 
 	go func() {
 		for d := range msgs {
-			d.Ack(false)
-
-			log.Printf("Received a text message: %s", d.Body)
+			// TODO: toggle ack vs nack to simulate max retries based on cli flags
+			d.Nack(false, false)
+			// d.Ack(false)
+			// log.Printf("Received a text message: %s", d.Body)
 		}
 	}()
 

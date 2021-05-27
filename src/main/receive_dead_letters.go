@@ -16,10 +16,12 @@ func main() {
 	helpers.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
+	// NOTE: Consume is destructive, if set up to auto ack, the messages will be lost between when
+	// they are taken from the queue and when they are processed here IF the consumer crashes for whatever reason.
 	msgs, err := ch.Consume(
 		"messages_dlq",
 		"",
-		true,
+		false,
 		false,
 		false,
 		false,
@@ -32,23 +34,23 @@ func main() {
 	go func() {
 		numProcessed := 0
 		for d := range msgs {
-			log.Printf("Received a text message: %s", d.Body)
-			log.Printf("exchange: %v\nrouting key: %v", d.Exchange, d.RoutingKey)
+			log.Printf("exchange: %v\nrouting key: %v\ncontent-type: %v", d.Exchange, d.RoutingKey, d.ContentType)
 			err = ch.Publish(
 				"messages",
 				d.RoutingKey,
 				false,
 				false,
 				amqp.Publishing {
-					ContentType: "application",
+					ContentType: d.ContentType,
 					Body:        d.Body,
 				})
 			helpers.FailOnError(err, "Failed to publish a message")
 			log.Printf(" [x] Resurrected message %v: %s", numProcessed, d.Body)
+			d.Ack(false)
+			numProcessed++
 
 			// sleep used here to limit spam in case of unprocessable messages
 			time.Sleep(1 * time.Second)
-			numProcessed++
 		}
 	}()
 

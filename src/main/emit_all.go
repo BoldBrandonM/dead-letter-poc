@@ -16,8 +16,7 @@ func main() {
 	helpers.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	// TODO: test multiple queues sending to the same dlx
-	helpers.SetupQueueBinding(ch, "messages", "topic", "text_queue", "text", "", false)
+	helpers.SetupQueueBinding(ch, "messages", "topic", "text_queue", "text", "messages_dlx", false)
 	helpers.SetupQueueBinding(ch, "messages", "topic", "bytes_queue", "bytes", "messages_dlx", false)
 	helpers.SetupQueueBinding(ch, "messages_dlx", "fanout", "messages_dlq", "", "", true)
 
