@@ -15,8 +15,19 @@ func main() {
 	helpers.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
+	err = ch.ExchangeDeclare(
+		"messages", // name
+		"topic",      // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
+	)
+	helpers.FailOnError(err, "Failed to declare an exchange")
+
 	q, err := ch.QueueDeclare(
-		"hello", // name
+		"bytes_queue", // name
 		false,   // durable
 		false,   // delete when unused
 		false,   // exclusive
@@ -24,6 +35,12 @@ func main() {
 		nil,     // arguments
 	)
 	helpers.FailOnError(err, "Failed to declare a queue")
+
+	err = ch.QueueBind(q.Name,       // queue name
+		"bytes",            // routing key
+		"messages", // exchange
+		false,
+		nil)
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
@@ -40,7 +57,7 @@ func main() {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
+			log.Printf("Received a bytes message: %s", d.Body)
 		}
 	}()
 
