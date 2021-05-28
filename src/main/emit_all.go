@@ -27,13 +27,12 @@ func main() {
 		body := "Hello World!"
 
 		// every 5th message, emit something different. Consumers can use this to test manually publishing dead letters
-		if i % 5 == 0 {
+		if i % 10 == 0 {
 			body = "Hello Underworld!"
 		}
 
 		helpers.PublishMessage(ch, "messages", "text", "text/plain", body)
 		helpers.PublishMessage(ch, "messages", "bytes", "application", body)
-		helpers.PublishMessage(ch, "messages", "text", "text/plain", body)
 		i++
 
 		// sleep used here to simulate metered production of messages
